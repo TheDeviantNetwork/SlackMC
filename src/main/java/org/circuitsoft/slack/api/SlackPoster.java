@@ -46,7 +46,6 @@ public class SlackPoster implements Runnable {
 
     private void post(SlackMessage message){
         String jsonStr = "payload=" + message.getPayLoad();
-        System.out.println("post: "+ message.getPayLoad());
         try {
             HttpURLConnection webhookConnection = (HttpURLConnection) new URL(webhookUrl).openConnection();
             webhookConnection.setRequestMethod("POST");
@@ -56,9 +55,6 @@ public class SlackPoster implements Runnable {
                 bufOut.flush();
                 bufOut.close();
             }
-            int serverResponseCode = webhookConnection.getResponseCode();
-            System.out.println(webhookConnection.getResponseMessage());
-            System.out.println(serverResponseCode);
             webhookConnection.disconnect();
         } catch (Exception ignored) {
             ignored.printStackTrace();
