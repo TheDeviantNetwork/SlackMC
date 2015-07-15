@@ -1,5 +1,7 @@
 package org.circuitsoft.slack.api;
 
-public class SlackCollector {
+import java.util.Map;
 
+public interface SlackCollector {
+    void onMessage(Map<String, String> message);
 }

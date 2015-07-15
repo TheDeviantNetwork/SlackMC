@@ -1,9 +1,10 @@
 package org.circuitsoft.slack.bukkit;
 
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-import java.util.logging.Level;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -20,11 +21,17 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.circuitsoft.slack.api.SlackMessage;
 import org.circuitsoft.slack.api.SlackPoster;
+import org.circuitsoft.slack.api.SlackCollector;
+import org.circuitsoft.slack.api.web.SlackWebServer;
 
-public class SlackBukkit extends JavaPlugin implements Listener {
+
+
+public class SlackBukkit extends JavaPlugin implements Listener, SlackCollector {
 
     private SlackPoster slackPoster;
     private List<String> blacklist;
+    private SlackWebServer slackWebServer;
+    private String messageformat;
 
     @Override
     public void onEnable() {
@@ -33,18 +40,28 @@ public class SlackBukkit extends JavaPlugin implements Listener {
         updateConfig(getDescription().getVersion());
         //todo: add more webhooks to SlackPoster
         String webhookUrl = getConfig().getString("channels.default.incoming-webhook");
+        messageformat = getConfig().getString("channels.default.text-formating");
         blacklist = getConfig().getStringList("blacklist");
         if (webhookUrl == null || webhookUrl.trim().isEmpty() || webhookUrl.equals("https://hooks.slack.com/services/")) {
             getLogger().severe("You have not set your webhook URL in the config!");
             setEnabled(false);
             return;
         }
+
         slackPoster = new SlackPoster(webhookUrl);
         getServer().getScheduler().runTaskAsynchronously(this, slackPoster);
+
+        try {
+            this.slackWebServer = new SlackWebServer(getConfig().getInt("channels.default.outgoing-webhook-port"), this);
+            getServer().getScheduler().runTaskAsynchronously(this, slackWebServer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void onDisable() {
+        slackWebServer.setRunning(false);
         getLogger().info("Slack has been disabled!");
     }
 
@@ -81,7 +98,7 @@ public class SlackBukkit extends JavaPlugin implements Listener {
     }
     
     private void send(String message, Player player, boolean useMarkdown) {
-        slackPoster.addMessage(new SlackMessage(message, player.getName(),useMarkdown));
+        slackPoster.addMessage(new SlackMessage(message, player.getName(), useMarkdown));
     }
 
     private boolean isAllowed(String command) {
@@ -165,5 +182,15 @@ public class SlackBukkit extends JavaPlugin implements Listener {
 
     public SlackPoster getSlackPoster() {
         return slackPoster;
+    }
+
+    @Override
+    public void onMessage(final Map<String, String> message) {
+        getServer().getScheduler().runTask(this, new Runnable() {
+            @Override
+            public void run() {
+                Bukkit.broadcastMessage(ChatColor.translateAlternateColorCodes('&', String.format(messageformat, message.get("user_name"), message.get("text"))));
+            }
+        });
     }
 }

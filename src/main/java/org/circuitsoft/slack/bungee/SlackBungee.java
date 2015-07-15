@@ -18,12 +18,14 @@ import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
 import org.circuitsoft.slack.api.SlackMessage;
 import org.circuitsoft.slack.api.SlackPoster;
+import org.circuitsoft.slack.api.web.SlackWebServer;
 
 public class SlackBungee extends Plugin implements Listener {
 
     private List<String> blacklist;
     private Configuration config;
     private SlackPoster slackPoster;
+    private SlackWebServer slackWebServer;
 
     @Override
     public void onEnable() {
@@ -45,6 +47,7 @@ public class SlackBungee extends Plugin implements Listener {
         }
         this.slackPoster = new SlackPoster(webhookUrl);
         getProxy().getScheduler().runAsync(this, slackPoster);
+
     }
 
     public void reloadConfig() {

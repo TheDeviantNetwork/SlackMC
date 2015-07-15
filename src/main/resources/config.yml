@@ -26,8 +26,13 @@ channels:
     default:
         # The incoming webhook (required for default)
         incoming-webhook: ''
-        # The outgoing webhook (required when receiving Slack messages)
-        outgoing-webhook: ''
+        # The outgoing webhook key (required when receiving Slack messages)
+        outgoing-webhook-key: ''
+        # Port being used for the local webservice. If you add the ip to slack it should be
+        outgoing-webhook-port: 8080
+
+        text-formating: "[slack]<%s> %s"
+
         # What sources should be classified for handling for this channel
         # When using Bukkit, the default source type is a world. Example:
         # source: world
